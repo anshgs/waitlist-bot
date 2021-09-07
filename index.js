@@ -38,12 +38,22 @@ class Graph {
     this.edge_names = new Map();
   }
   
-  addEdge(source, destination) {
+  addEdge(source, destination, username) {
     const sourceNode = this.addVertex(source);
     const destinationNode = this.addVertex(destination);
   
     sourceNode.addAdjacent(destinationNode);
-    
+    if(this.edge_names.has(source)){
+      if(this.edge_names.get(source).has(destination)){
+        this.edge_names.get(source).get(destination).push(username);
+      }else{
+        this.edge_names.get(source).set(destination, [username]);
+      }
+    }else{
+      var newMap = new Map(); 
+      newMap.set(destination, [username]);
+      this.edge_names.set(source, newMap);
+    }
 
     return [sourceNode, destinationNode];
   }
@@ -195,7 +205,7 @@ client.on('messageCreate', async message => {
     }else if(command == "add"){
         if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!add currentCRN targetCRN'")
         else{
-            add(split[1], split[2]);
+            add(split[1], split[2], message.member.user.tag);
             
             message.reply("Added CRN:" + split[1] + " to our servers\nInputted request for CRN:" + split[2]);
             let source = split[1];
@@ -203,8 +213,9 @@ client.on('messageCreate', async message => {
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
               var output = "";
+              console.log(graph.cycle);
               for(let i = 0; i<graph.cycle.length-1; i++){
-                output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": (insert usernames here)\n");
+                output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
               message.reply(output);
             }
@@ -218,10 +229,10 @@ client.on('messageCreate', async message => {
     return;
 });
 
-function add(drop, target){
+function add(drop, target, username){
     graph.addVertex(drop);
     graph.addVertex(target);
-    graph.addEdge(drop, target);
+    graph.addEdge(drop, target, username);
     //console.log(graph.nodes);
 }
 
