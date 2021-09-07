@@ -88,39 +88,27 @@ class Graph {
   }
 
   detectCycle(){
-      //console.log("I've been called upon");
       const graphNodes = this.nodes;
-      //console.log(graphNodes);
-      //console.log(graphNodes);
       const visited = {};
       const recStack = {};
       const memory = [];
-      //console.log(graphNodes.keys())
       for(let [, value] of graphNodes){
-          //console.log('reached?' + key);
           const ans = this.detectCycleHelper(value, visited, recStack, memory);
-          //console.log(ans);
           if(ans) return true;
       }
       return false;
   }
 
   detectCycleHelper(vertex, visited, recStack, memory){
-      //console.log('called');
       if(!visited[vertex.value]){
           visited[vertex.value] = true;
           recStack[vertex.value] = true;
           memory.push(vertex.value);
-          console.log(memory + ".><.");
           const nodeNeighbors = vertex.getAdjacents();
-          //console.log('reached');
-          //console.log(nodeNeighbors);
           for(let i = 0; i<nodeNeighbors.length; i++){
             const currentNode = nodeNeighbors[i];
             if(!visited[currentNode.value] && this.detectCycleHelper(currentNode, visited, recStack, memory)){
-                //console.log(recStack);
                 const index = memory.indexOf(vertex.value);
-                console.log(memory.slice(index));
                 this.cycle = memory.slice(index);
                 return true;
             }else if(recStack[currentNode.value]){
@@ -134,28 +122,21 @@ class Graph {
   }
 
   detectCycleWithEdge(index, visited, recStack, memory){
-    //console.log('called');
     const vertex = graph.addVertex(index);
     if(!visited[vertex.value]){
         visited[vertex.value] = true;
-        //recStack[vertex.value] = true;
         memory.push(index);
-        console.log(memory + ".><.");
         const nodeNeighbors = vertex.getAdjacents();
-        //console.log('reached');
-        //console.log(nodeNeighbors);
         for(let i = 0; i<nodeNeighbors.length; i++){
           const currentNode = nodeNeighbors[i];
           if(!visited[currentNode.value] && this.detectCycleWithEdge(currentNode.value, visited, recStack, memory)){
-              //console.log(recStack);
-              this.cycle = memory; //don't need index since you know its the first element
+              this.cycle = memory; 
               return true;
           }else if(index == memory[0]){
               return true;
           }
         }
     }
-    //recStack[vertex.value] = false;
     memory.pop();
     return false;
 }
@@ -166,23 +147,6 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 
 var graph = new Graph();
 
-// client.commands = new Collection;
-// const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-
-// for(const file of commandFiles){
-//     const command = require(`./commands/${file}`);
-//     client.commands.set(command.data.name, command);
-// }
-
-// for (const file of eventFiles) {
-// 	const event = require(`./events/${file}`);
-// 	if (event.once) {
-// 		client.once(event.name, (...args) => event.execute(...args));
-// 	} else {
-// 		client.on(event.name, (...args) => event.execute(...args));
-// 	}
-// }
-
 prefix = "!"
 
 client.once('ready', () => {
@@ -190,7 +154,6 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async message => {
-    //console.log(message.content);
 	if (!message.content.startsWith(prefix) || message.author.bot) return;
 
 	const withoutPrefix = message.content.slice(prefix.length);
@@ -204,7 +167,6 @@ client.on('messageCreate', async message => {
       if(graph.detectCycle()){
         message.reply("A cycle has been found in the graph!");
         var output = "";
-        console.log(graph.cycle);
         for(let i = 0; i<graph.cycle.length-1; i++){
           output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
         }
@@ -222,7 +184,6 @@ client.on('messageCreate', async message => {
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
               var output = "";
-              console.log(graph.cycle);
               for(let i = 0; i<graph.cycle.length-1; i++){
                 output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
@@ -242,7 +203,6 @@ client.on('messageCreate', async message => {
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
               var output = "";
-              console.log(graph.cycle);
               for(let i = 0; i<graph.cycle.length-1; i++){
                 output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
@@ -262,28 +222,7 @@ function add(drop, target, username){
     graph.addVertex(drop);
     graph.addVertex(target);
     graph.addEdge(drop, target, username);
-    //console.log(graph.nodes);
 }
 
-
-
-// client.on('interactionCreate', async interaction => {
-// 	console.log(`${interaction.user.tag} in #${interaction.channel.name} triggered an interaction.`);
-
-//     if (!interaction.isCommand()) return;
-
-// 	const { commandName } = interaction;
-
-//     const command = client.commands.get(interaction.commandName);
-
-// 	if (!command) return;
-
-// 	try {
-// 		await command.execute(interaction);
-// 	} catch (error) {
-// 		console.error(error);
-// 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
-// 	}
-// });
 
 client.login(token);
