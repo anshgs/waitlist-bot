@@ -29,3 +29,5 @@ Command List:
     !searchAll: searches entire database for a cycle and returns a cycle if found. 
     
     !help: returns help menu
+
+This bot was built using node.js alongside the discord.js module. 
