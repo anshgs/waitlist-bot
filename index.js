@@ -1,8 +1,6 @@
 const { Client, Collection, Intents} = require('discord.js');
 const { token } = require('./config.json');
 const fs = require('fs');
-const interactionCreate = require('./events/interactionCreate');
-const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 
 class Node {
     constructor(value) {
@@ -202,10 +200,41 @@ client.on('messageCreate', async message => {
 
     if(command=="echo"){
         return message.reply(args);
-    }else if(command == "add"){
+    }else if(command == "searchAll"){
+      if(graph.detectCycle()){
+        message.reply("A cycle has been found in the graph!");
+        var output = "";
+        console.log(graph.cycle);
+        for(let i = 0; i<graph.cycle.length-1; i++){
+          output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+        }
+        message.reply(output);
+      }else{
+        message.reply("no cycle exists at the moment")
+      }
+      return;
+    }
+    else if(command == "query"){
+      if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!add currentCRN targetCRN'")
+        else{            
+            let source = split[1];
+            let target = split[2];
+            if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
+              message.reply("A cycle has been found using this edge!");
+              var output = "";
+              console.log(graph.cycle);
+              for(let i = 0; i<graph.cycle.length-1; i++){
+                output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+              }
+              message.reply(output);
+            }
+            return;
+        }
+    }
+    else if(command == "add"){
         if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!add currentCRN targetCRN'")
         else{
-            add(split[1], split[2], message.member.user.tag);
+            add(split[1], split[2], "<@" + message.author.id + ">");
             
             message.reply("Added CRN:" + split[1] + " to our servers\nInputted request for CRN:" + split[2]);
             let source = split[1];
