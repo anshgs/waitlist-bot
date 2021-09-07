@@ -161,14 +161,12 @@ client.on('messageCreate', async message => {
 	const command = split[0];
 	const args = split[1];
 
-    if(command=="echo"){
-        return message.reply(args);
-    }else if(command == "searchAll"){
+    if(command == "searchAll"){
       if(graph.detectCycle()){
         message.reply("A cycle has been found in the graph!");
         var output = "";
         for(let i = 0; i<graph.cycle.length-1; i++){
-          output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+          output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": Potential Users Include:" + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
         }
         message.reply(output);
       }else{
@@ -197,22 +195,25 @@ client.on('messageCreate', async message => {
         else{
             add(split[1], split[2], "<@" + message.author.id + ">");
             
-            message.reply("Added CRN:" + split[1] + " to our servers\nInputted request for CRN:" + split[2]);
+            message.reply("Added connection between potential drop: CRN" + split[1] + " and target course: CRN" + split[2]);
             let source = split[1];
             let target = split[2];
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
               var output = "";
               for(let i = 0; i<graph.cycle.length-1; i++){
-                output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+                output+=("drop: CRN" +graph.cycle[i] + "-> register for: CRN" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
               message.reply(output);
             }
             return;
         }
     }else if (command == "help"){
-        return message.reply("Available functions:\n!echo [message]: " + 
-            "repeats message\n!add [CRNdrop] [CRNadd]: adds a registry in our graph connecting drop to add\n!help: returns help menu");
+        return message.reply("Available functions:\n!searchAll: " + 
+            "searches entire database for a cycle and returns a cycle if found\n" + 
+            "!add [CRNdrop] [CRNadd]: adds a registry in our graph connecting drop to add and searches for a cycle including that edge\n" +
+            "!query [CRNdrop] [CRNadd]: checks for a cycle including the given edge\n"
+            "!help: returns help menu");
     }
     message.reply("that isn't a valid command probably");
     return;
