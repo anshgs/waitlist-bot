@@ -35,7 +35,46 @@ class Graph {
     this.cycle = [];
     this.edge_names = new Map();
   }
-  
+
+  getAllEdges(username){
+    var output = "";
+    for(const [keys, values] of this.edge_names){
+      for(const [mkeys, mvalues] of values){
+        if(mvalues.indexOf(username)>-1){
+          output+=("Desired Drop: " +keys+" -> Desired Target: "+mkeys +"\n");
+        }
+      }
+    }
+    return output;
+  }
+
+  removeUser(username){
+    var output = "";
+    for(var [keys, values] of this.edge_names){
+      for(var [mkeys, mvalues] of values){
+        while(mvalues.indexOf(username)>-1){
+          this.removeEdgeUser(keys, mkeys, username);
+        }
+      }
+    }
+  }
+
+  removeEdgeUser(source, destination, username){
+    if(this.edge_names.has(source) && this.edge_names.get(source).has(destination) && this.edge_names.get(source).get(destination).indexOf(username)>-1){
+      var index = this.edge_names.get(source).get(destination).indexOf(username);
+      this.edge_names.get(source).get(destination).splice(index, 1);
+      if(this.edge_names.get(source).get(destination).length==0){
+        this.edge_names.get(source).delete(destination);
+        this.removeEdge(source, destination);
+      }
+      if(!this.edge_names.get(source).length==0){
+        this.edge_names.delete(source);
+      }
+      return true;
+    }
+    return false;
+  }
+
   addEdge(source, destination, username) {
     const sourceNode = this.addVertex(source);
     const destinationNode = this.addVertex(destination);
@@ -83,7 +122,7 @@ class Graph {
     if(sourceNode && destinationNode) {
       sourceNode.removeAdjacent(destinationNode);
     }
-  
+
     return [sourceNode, destinationNode];
   }
 
@@ -151,7 +190,10 @@ prefix = "!"
 
 client.once('ready', () => {
 	console.log('Ready!');
+  const status = "!help"
+  client.user.setActivity(status, { type: 'LISTENING' });
 });
+
 
 client.on('messageCreate', async message => {
 	if (!message.content.startsWith(prefix) || message.author.bot) return;
@@ -160,6 +202,7 @@ client.on('messageCreate', async message => {
 	const split = withoutPrefix.split(/ +/);
 	const command = split[0];
 	const args = split[1];
+  const usernametag = "<@" + message.author.id + ">";
 
     if(command == "searchAll"){
       if(graph.detectCycle()){
@@ -173,6 +216,26 @@ client.on('messageCreate', async message => {
         message.reply("no cycle exists at the moment")
       }
       return;
+    }else if(command == "queryAll"){
+      for(const [keys, values] of graph.edge_names){
+        for(const [mkeys, mvalues] of values){
+          if(mvalues.indexOf(usernametag)>-1){
+            let source = keys;
+            let target = mkeys;
+            if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
+              message.reply("A cycle has been found using " + keys + " -> " + mkeys);
+              var output = "Potential Cycle Found: \n\n";
+              for(let i = 0; i<graph.cycle.length-1; i++){
+                output+=("Step "+ (i+1) + ": drop " +graph.cycle[i] + " and register for " + graph.cycle[i+1] + "\n\t Potential Users: " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+              }
+              message.reply(output);
+            }else{
+              message.reply("No cycle found with " + keys + " -> " + mkeys); 
+            }
+          }
+        }
+      }
+      return;
     }
     else if(command == "query"){
       if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!add currentCRN targetCRN'")
@@ -181,41 +244,68 @@ client.on('messageCreate', async message => {
             let target = split[2];
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
-              var output = "";
+              var output = "Potential Cycle Found: \n\n";
               for(let i = 0; i<graph.cycle.length-1; i++){
-                output+=(graph.cycle[i] + "->" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+                output+=("Step "+ (i+1) + ": drop " +graph.cycle[i] + " and register for " + graph.cycle[i+1] + "\n\t Potential Users: " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
               message.reply(output);
+            }else{
+              message.reply("No cycle found with the given edge");
             }
             return;
         }
     }
     else if(command == "add"){
-        if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!add currentCRN targetCRN'")
+        if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!query currentCRN targetCRN'")
         else{
             add(split[1], split[2], "<@" + message.author.id + ">");
             
-            message.reply("Added connection (Droppable: CRN" + split[1] + ", Target: CRN" + split[2] + ") for user " + "<@" + message.author.id + ">");
+            message.reply("Added connection (Droppable: " + split[1] + ", Target: " + split[2] + ") for user " + "<@" + message.author.id + ">");
             let source = split[1];
             let target = split[2];
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
               message.reply("A cycle has been found using this edge!");
-              var output = "";
+              var output = "Potential Cycle Found: \n\n";
               for(let i = 0; i<graph.cycle.length-1; i++){
-                output+=("drop: CRN" +graph.cycle[i] + "-> register for: CRN" + graph.cycle[i+1] + ": " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
+                output+=("Step "+ (i+1) + ": drop " +graph.cycle[i] + " and register for " + graph.cycle[i+1] + "\n\t Potential Users: " + graph.edge_names.get(graph.cycle[i]).get(graph.cycle[i+1]) + "\n");
               }
               message.reply(output);
             }
             return;
         }
-    }else if (command == "help"){
-        return message.reply("Available functions:\n!searchAll: " + 
-            "searches entire database for a cycle and returns a cycle if found\n" + 
-            "!add [CRNdrop] [CRNadd]: adds a registry in our graph connecting drop to add and searches for a cycle including that edge\n" +
-            "!query [CRNdrop] [CRNadd]: checks for a cycle including the given edge\n" +
+    }else if(command=="getAllEdges"){
+      const output = graph.getAllEdges(usernametag);
+      if(output)
+        return message.reply(output);
+      else 
+        return message.reply(usernametag + " isn't in our database yet");
+    }
+    else if(command=="remove"){
+      if(split.length!=3) return message.reply("Incorrect Format. Please enter an input of the form '!remove currentCRN targetCRN'")
+      else{
+        let source = split[1];
+        let target = split[2];
+        if(graph.removeEdgeUser(source, target, usernametag)) message.reply("Edge has been removed");
+        else message.reply("Edge doesn't exist");
+        return;
+      }
+    }
+    else if(command=="removeUser"){
+      graph.removeUser(usernametag);
+      return message.reply(usernametag+" has been removed from the database")
+    }
+    else if (command == "help"){
+        return message.reply("Available functions:\n"+
+            "!add [CRNdrop] [CRNadd]: Adds to graph and queries the course you are willing to drop and the course you wish to get into\n\n" +
+            "!getAllEdges: returns all edges associated with the calling user\n\n" + 
+            "!query [CRNdrop] [CRNadd]: checks for a cycle including the given edge. Can query for an edge that doesn't exist yet\n\n" +
+            "!queryAll: checks every entry associated with the calling user for a cycle\n\n" +
+            "!remove [CRNdrop] [CRNadd]: Removes an entry connecting CRNdrop to CRNadd made by the calling user\n\n"+
+            "!removeUser: Removes all entries in database associated with the calling user\n\n"+
+            "!searchAll: searches entire database for a cycle and returns a cycle if found\n\n" + 
             "!help: returns help menu");
     }
-    message.reply("that isn't a valid command probably");
+    message.reply("That isn't a valid command! Use !help to get a full list of acceptable commands and descriptions.");
     return;
 });
 
