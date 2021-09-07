@@ -195,7 +195,7 @@ client.on('messageCreate', async message => {
         else{
             add(split[1], split[2], "<@" + message.author.id + ">");
             
-            message.reply("Added connection between potential drop: CRN" + split[1] + " and target course: CRN" + split[2]);
+            message.reply("Added connection (Droppable: CRN" + split[1] + ", Target: CRN" + split[2] + ") for user " + "<@" + message.author.id + ">");
             let source = split[1];
             let target = split[2];
             if(graph.detectCycleWithEdge(target, [], {source:true}, [source])){
