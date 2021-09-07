@@ -212,7 +212,7 @@ client.on('messageCreate', async message => {
         return message.reply("Available functions:\n!searchAll: " + 
             "searches entire database for a cycle and returns a cycle if found\n" + 
             "!add [CRNdrop] [CRNadd]: adds a registry in our graph connecting drop to add and searches for a cycle including that edge\n" +
-            "!query [CRNdrop] [CRNadd]: checks for a cycle including the given edge\n"
+            "!query [CRNdrop] [CRNadd]: checks for a cycle including the given edge\n" +
             "!help: returns help menu");
     }
     message.reply("that isn't a valid command probably");
