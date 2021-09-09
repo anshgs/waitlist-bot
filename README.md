@@ -7,7 +7,8 @@ To add this bot to your server, use the following link:
 https://discord.com/oauth2/authorize?client_id=884634092719706153&scope=bot&code=JBcnxq1j25tC3HeBXm7zAJNAWTuckH&guild_id=783477278268588113&permissions=207872
 
 The bot works by creating a directed graph based on user inputs. 
-A user can contribute an edge to the graph by providing the CRN of a course/timeslot they are currently registered in and wish to drop, as well as the CRN of a course/timeslot that they are trying to get into.
+A user can contribute an edge to the graph by providing the CRN of a course/timeslot they are trying to get into as well as the CRN of a course/timeslot that they are currently registered in and plan to drop if they get their target course/timeslot. 
+
 Waitlist-bot then utilizes a DFS to detect cycles, and notifies every user who has inputted an edge involved in the cycle with instructions on how to resolve the cycle. 
 
 Assuming the notified users follow the instructions provided by waitlist-bot, each person in the cycle will be able to register for their desired course in exchange for dropping the course they offered to!
